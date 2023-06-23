@@ -90,7 +90,7 @@ func (args *TLSSetting) Convert() *otelconfigtls.TLSSetting {
 	}
 
 	if args.Key != "" {
-		res.KeyPem = []byte(string(args.Key))
+		res.KeyPem = []byte(args.Key)
 	}
 
 	return res

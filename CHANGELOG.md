@@ -26,7 +26,8 @@ Main (unreleased)
     components and modifies attributes of a span, log, or metric. (@ptodev)
   - `prometheus.exporter.squid` collects metrics from a squid server. (@armstrmi)
   - `prometheus.exporter.elasticsearch` collects metrics from Elasticsearch. (@marctc)
-  - `otelcol.exporter.loadbalancing` - export traces to multiple OTLP gRPC endpoints in a load-balanced way. (@ptodev)
+  - `otelcol.exporter.loadbalancing` - export traces and logs to multiple OTLP gRPC 
+    endpoints in a load-balanced way. (@ptodev)
 
 - Added json_path function to river stdlib. (@jkroepke)
 

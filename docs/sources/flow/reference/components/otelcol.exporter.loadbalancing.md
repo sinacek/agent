@@ -8,7 +8,7 @@ labels:
 
 {{< docs/shared lookup="flow/stability/beta.md" source="agent" >}}
 
-`otelcol.exporter.loadbalancing` accepts logs and/or traces from other `otelcol` components
+`otelcol.exporter.loadbalancing` accepts logs and traces from other `otelcol` components
 and writes them over the network using the OpenTelemetry Protocol (OTLP) protocol. 
 
 > **NOTE**: `otelcol.exporter.loadbalancing` is a wrapper over the upstream
@@ -18,17 +18,22 @@ and writes them over the network using the OpenTelemetry Protocol (OTLP) protoco
 Multiple `otelcol.exporter.loadbalancing` components can be specified by giving them
 different labels.
 
-Note that either a trace ID or a service name is used for the decision on which backend to use. 
-The actual backend load isn't taken into consideration. Even though this load-balancer won't do 
-round-robin balancing of the batches, the load distribution should be very similar among backends 
+The decision which backend to use depends on the trace ID or the service name. 
+The backend load doesn't influence the choice. Even though this load-balancer won't do 
+round-robin balancing of the batches, the load distribution should be very similar among backends, 
 with a standard deviation under 5% at the current configuration.
 
 `otelcol.exporter.loadbalancing` is especially useful for backends configured with tail-based samplers
-which make a decision based on the view of the full trace.
+which choose a backend based on the view of the full trace.
 
-When a list of backends is updated, around `1/n` of the space will be changed, so that the same trace ID 
-might be directed to a different backend, where `n` is the number of backends. This should be stable enough 
-for most cases, and the higher the number of backends, the less disruption it should cause.
+When a list of backends is updated, some of the signals will be rerouted to different backends. 
+Around R/N of the "routes" will be rerouted differently, where:
+
+* A "route" is either a trace ID or a service name mapped to a certain backend.
+* "R" is the total number of routes.
+* "N" is the total number of backends.
+
+This should be stable enough for most cases, and the larger the number of backends, the less disruption it should cause.
 
 ## Usage
 
@@ -54,10 +59,10 @@ Name | Type | Description | Default | Required
 `routing_key` | `string` | Routing strategy for load balancing. | `"traceID"` | no
 
 The `routing_key` attribute determines how to route signals across endpoints. Its value could be one of the following:
-* `"service"`: exports spans based on their service name. This is useful when using processors like the span metrics, 
-so all spans for each service are sent to consistent collector instances for metric collection. 
-Otherwise, metrics for the same services would be sent to different collectors, making aggregations inaccurate.
-* `"traceID"`: exports spans based on their traceID.
+* `"service"`: spans with the same `service.name` will be exported to the same backend.
+This is useful when using processors like the span metrics, so all spans for each service are sent to consistent Agent instances 
+for metric collection. Otherwise, metrics for the same services would be sent to different Agents, making aggregations inaccurate.
+* `"traceID"`: spans belonging to the same traceID will be exported to the same backend.
 
 ## Blocks
 
@@ -112,16 +117,16 @@ Name | Type | Description | Default | Required
 
 The `dns` block periodically resolves an IP address via the DNS `hostname` attribute. This IP address 
 and the port specified via the `port` attribute will then be used by the gRPC exporter 
-as the endpoint to which to send data to.
+as the endpoint to which to export data to.
 
 The following arguments are supported:
 
 Name | Type | Description | Default | Required
 ---- | ---- | ----------- | ------- | --------
 `hostname` | `string`   | DNS hostname to resolve. |  | yes
-`port`     | `string`   | Port to be used with the resolved IP address. | `"4317"` | no
 `interval` | `duration` | Resolver interval. | `"5s"` | no
 `timeout`  | `duration` | Resolver timeout. | `"1s"`  | no
+`port`     | `string`   | Port to be used with the IP addresses resolved from the DNS hostname. | `"4317"` | no
 
 ### protocol block
 
@@ -155,7 +160,7 @@ The `balancer_name` argument controls what client-side load balancing mechanism
 to use. See the gRPC documentation on [Load balancing][] for more information.
 When unspecified, `pick_first` is used.
 
-An HTTP proxy can be configured through the following environment variables:
+You can configure an HTTP proxy with the following environment variables:
 
 * `HTTPS_PROXY`
 * `NO_PROXY`
@@ -220,7 +225,7 @@ Name | Type | Description
 ---- | ---- | -----------
 `input` | `otelcol.Consumer` | A value that other components can use to send telemetry data to.
 
-`input` accepts `otelcol.Consumer` data for telemetry signals of these types:
+`input` accepts `otelcol.Consumer` OTLP-formatted data for telemetry signals of these types:
 * logs
 * traces
 

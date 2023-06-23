@@ -111,8 +111,8 @@ func (resolverSettings ResolverSettings) Convert() loadbalancingexporter.Resolve
 	}
 
 	if resolverSettings.DNS != nil {
-		dnsResover := resolverSettings.DNS.Convert()
-		res.DNS = &dnsResover
+		dnsResolver := resolverSettings.DNS.Convert()
+		res.DNS = &dnsResolver
 	}
 
 	return res
