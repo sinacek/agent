@@ -49,19 +49,10 @@ func AppendAll(f *builder.File, cfg *promtailcfg.Config) diag.Diagnostics {
 	return diags
 }
 
-//func appendRemoteWrite(f *builder.File, promConfig *promconfig.Config) *remotewrite.Exports {
-//	remoteWriteArgs := toRemotewriteArguments(promConfig)
-//	common.AppendBlockWithOverride(f, []string{"prometheus", "remote_write"}, "default", remoteWriteArgs)
-//
-//	return &remotewrite.Exports{
-//		Receiver: common.ConvertAppendable{Expr: "prometheus.remote_write.default.receiver"},
-//	}
-//}
-
 func appendLokiWrite(f *builder.File, client *client.Config, index int) *lokiwrite.Exports {
-	name := fmt.Sprintf("default_%d", index)
+	label := fmt.Sprintf("default_%d", index)
 	lokiWriteArgs := toLokiWriteArguments(client)
-	common.AppendBlockWithOverride(f, []string{"loki", "write"}, name, lokiWriteArgs)
+	f.Body().AppendBlock(common.NewBlockWithOverride([]string{"loki", "write"}, label, lokiWriteArgs))
 	return &lokiwrite.Exports{
 		Receiver: make(loki.LogsReceiver),
 	}
