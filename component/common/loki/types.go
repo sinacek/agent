@@ -50,6 +50,13 @@ func NewLogsReceiverWithChannel(c chan Entry) LogsReceiver {
 }
 
 // TODO(piotr): Since LogsReceiver is not an interface, we can't extend it...
+// What we need is something like this:
+//
+//	 type LogsReceiver interface {
+//		  Chan() chan<- Entry
+//	 }
+//
+// but it's a larger refactor.
 func (l LogsReceiver) RiverTokenize() []builder.Token {
 	return []builder.Token{{
 		Tok: token.STRING,
