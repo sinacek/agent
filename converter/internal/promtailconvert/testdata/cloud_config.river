@@ -1,0 +1,16 @@
+loki.write "default_0" {
+	endpoint {
+		url                 = "http://localhost/loki/api/v1/push"
+		batch_wait          = "0s"
+		batch_size          = "0B"
+		remote_timeout      = "0s"
+		min_backoff_period  = "0s"
+		max_backoff_period  = "0s"
+		max_backoff_retries = 0
+		follow_redirects    = false
+		enable_http2        = false
+	}
+	external_labels = {
+		cluster = "backyard-pine-treehouse-1",
+	}
+}

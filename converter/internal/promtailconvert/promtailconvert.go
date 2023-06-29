@@ -3,7 +3,6 @@ package promtailconvert
 import (
 	"bytes"
 	"fmt"
-	"github.com/grafana/agent/component/common/loki"
 	lokiwrite "github.com/grafana/agent/component/loki/write"
 	"github.com/grafana/agent/converter/internal/common"
 	"github.com/grafana/loki/clients/pkg/promtail/client"
@@ -40,10 +39,13 @@ func Convert(in []byte) ([]byte, diag.Diagnostics) {
 // AppendAll analyzes the entire promtail config in memory and transforms it
 // into Flow components. It then appends each argument to the file builder.
 func AppendAll(f *builder.File, cfg *promtailcfg.Config) diag.Diagnostics {
-	var diags diag.Diagnostics
+	var (
+		diags          diag.Diagnostics
+		writeReceivers = make([]*lokiwrite.Exports, len(cfg.ClientConfigs))
+	)
 
 	for i, c := range cfg.ClientConfigs {
-		appendLokiWrite(f, &c, i)
+		writeReceivers = append(writeReceivers, appendLokiWrite(f, &c, i))
 	}
 
 	return diags
@@ -54,7 +56,9 @@ func appendLokiWrite(f *builder.File, client *client.Config, index int) *lokiwri
 	lokiWriteArgs := toLokiWriteArguments(client)
 	f.Body().AppendBlock(common.NewBlockWithOverride([]string{"loki", "write"}, label, lokiWriteArgs))
 	return &lokiwrite.Exports{
-		Receiver: make(loki.LogsReceiver),
+		Receiver: common.ConvertLogsReceiver{
+			Expr: fmt.Sprintf("loki.write.%s", label),
+		},
 	}
 }
 
